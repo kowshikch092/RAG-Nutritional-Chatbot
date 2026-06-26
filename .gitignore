@@ -9,6 +9,7 @@ __pycache__/
 
 # Node
 # Node
+node_modules/
 rag-chat/node_modules/
 rag-chat/.next/
 
