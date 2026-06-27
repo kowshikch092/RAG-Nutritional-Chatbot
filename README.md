@@ -1,4 +1,4 @@
-# NutriRAG — Retrieval-Augmented Nutrition Assistant
+#🥗 NutriRAG — Retrieval-Augmented Nutrition Assistant
 
 **Production-grade RAG pipeline over a 1,200-page nutrition textbook. Answers grounded in retrieved evidence. Every claim linked to a source page.**
 
@@ -13,15 +13,46 @@
 ---
 
 
+
+
+---
+
+## Screenshot
+
+![Application Screenshot](assets/chat-ui.png)
+
+> The chat UI surfaces page-range citation badges (e.g. `p.592–634`) directly beneath each answer, allowing users to verify claims against the original textbook
+
+
+## Overview
+
+NutriRAG is a production-ready Retrieval-Augmented Generation (RAG) application that answers nutrition questions using a 1,200-page textbook. The system retrieves semantically relevant passages from a vector database and supplies them as context to the LLM, producing grounded answers with page-level citations while minimizing hallucinations.
+
+---
+
+
+
+
+## ✨ Highlights
+
+- 📚 RAG over a 1,200-page nutrition textbook
+- 🔍 Semantic retrieval using Supabase pgvector
+- 🧠 Local embeddings with all-MiniLM-L6-v2
+- ⚡ Groq Llama 3.3 inference
+- 📄 Citation-backed answers
+- 🛡️ Reduced hallucinations through grounded retrieval
+
+
+  
 ## System Architecture
 
 
 ![System Architecture](assets/architecture.png)
 
 
+## Live Demo
 
----
-
+🌐 https://http://localhost:3000
 
 ### Ingestion Pipeline (offline, run once)
 
@@ -63,15 +94,7 @@ sequenceDiagram
 
 ---
 
-## Overview
 
-Large language models are useful for general knowledge but fail when deployed over private, domain-specific documents. They either hallucinate content or lack the source material entirely. For nutrition science — where accuracy has real health implications — this is unacceptable.
-
-NutriRAG solves this by keeping the LLM out of the knowledge storage role entirely. A 1,200-page human nutrition textbook is pre-processed, chunked, and stored as dense vector embeddings in Supabase. At query time, the most semantically relevant passages are retrieved and injected into the LLM context as grounding evidence. The model is explicitly instructed to answer only from what is provided and to cite page numbers inline.
-
-The result: factually grounded answers with verifiable citations, sub-400ms end-to-end latency, and zero hallucination surface area from unseen content.
-
----
 
 ## Features
 
@@ -467,7 +490,7 @@ npm run dev
 
 | Variable | File | Description |
 |---|---|---|
-| `SUPERBASE_URL` | `.env` + `.env.local` | Supabase project URL (`https://xxx.supabase.co`) |
+| `SUPARBASE_URL` | `.env` + `.env.local` | Supabase project URL (`https://xxx.supabase.co`) |
 | `SUPABASE_SERVICE_ROLE_KEY` | `.env` | Service role key — used by ingestion to bypass RLS for bulk writes |
 | `NEXT_PUBLIC_SUPABASE_URL` | `.env.local` | Same Supabase URL, exposed to Next.js server components |
 | `SUPABASE_ANON_KEY` | `.env.local` | Anon key for read-only operations |
@@ -543,11 +566,20 @@ Re-running ingestion after changing chunking parameters without clearing old dat
 
 ---
 
-## Screenshot
+## Skills Demonstrated
 
-![Application Screenshot](assets/chat-ui.png)
-
-> The chat UI surfaces page-range citation badges (e.g. `p.592–634`) directly beneath each answer, allowing users to verify claims against the original textbook
+- Retrieval-Augmented Generation (RAG)
+- Semantic Search
+- Prompt Engineering
+- Vector Databases
+- Embedding Models
+- Next.js
+- React
+- TypeScript
+- Python
+- SQL
+- REST APIs
+- ---
 
 
 ## Future Improvements
