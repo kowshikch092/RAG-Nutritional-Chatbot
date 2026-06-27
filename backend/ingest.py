@@ -24,13 +24,13 @@ from dotenv import load_dotenv, find_dotenv
 # ── Import ALL chunking logic from chunking_strategies.py ─────────────────
 from chunking import build_final_chunks
 
-# ── Environment ───────────────────────────────────────────────────────────
+#  Environment 
 load_dotenv(find_dotenv(usecwd=True))
 
 SUPABASE_URL              = os.environ["SUPERBASEURL"]
 SUPABASE_SERVICE_ROLE_KEY = os.environ["SUPERBASE_SERVICE_ROLE_KEY"]
 
-# ── Config ─────────────────────────────────────────────────────────────────
+# Config
 PDF_PATH    = "human-nutrition-text.pdf"
 DOC_ID      = "nutrition-v1"
 EMBED_MODEL = "all-MiniLM-L6-v2"
@@ -73,16 +73,8 @@ def read_pdf_pages(path: str) -> list[dict]:
         doc.close()
     return pages
 
-
-# ╔══════════════════════════════════════════════════════════════════════════╗
 #   STEP 2 — EMBED
-# ╚══════════════════════════════════════════════════════════════════════════╝
-
 def embed_chunks(chunks: list[dict], model: SentenceTransformer) -> list[dict]:
-    """
-    Adds an 'embedding' key to every chunk dict (in-place).
-    Processes in batches of BATCH_EMBED for memory efficiency.
-    """
     texts = [c["content"] for c in chunks]
     print(f"  Embedding {len(texts)} chunks (batch size = {BATCH_EMBED})...")
 
@@ -97,11 +89,7 @@ def embed_chunks(chunks: list[dict], model: SentenceTransformer) -> list[dict]:
 
     return chunks
 
-
-# ╔══════════════════════════════════════════════════════════════════════════╗
 #   STEP 3 — UPLOAD TO SUPABASE
-# ╚══════════════════════════════════════════════════════════════════════════╝
-
 def upload_chunks(chunks: list[dict], sb: Client) -> None:
     """Inserts final chunk rows into the 'chunks' table in batches."""
     print(f"  Uploading {len(chunks)} rows (batch size = {BATCH_INSERT})...")
@@ -154,28 +142,24 @@ def upload_chunks(chunks: list[dict], sb: Client) -> None:
         sb.table("chunks").insert(batch).execute()
 
 
-# ╔══════════════════════════════════════════════════════════════════════════╗
-#   MAIN
-# ╚══════════════════════════════════════════════════════════════════════════╝
-
 def main():
-    # ── Supabase ───────────────────────────────────────────────────────────
+    # ─ Supabase
     sb: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-
-    # ── Embedding model ────────────────────────────────────────────────────
+    
+    #Embedding model
     print("Loading embedding model...")
     model = SentenceTransformer(EMBED_MODEL)
 
-    # ── Clear old data ─────────────────────────────────────────────────────
+    #  Clear old data
     print(f"Clearing old chunks for doc_id='{DOC_ID}'...")
     sb.table("chunks").delete().eq("doc_id", DOC_ID).execute()
 
-    # ── Step 1: Read PDF ───────────────────────────────────────────────────
+    #  Step 1: Read PDF 
     print(f"\n[1/3] Reading PDF: {PDF_PATH}")
     pages = read_pdf_pages(PDF_PATH)
     print(f"      Pages read: {len(pages)}")
 
-    # ── Step 2: Chunk (delegated to chunking_strategies.py) ───────────────
+    #  Step 2: Chunk (delegated to chunking_strategies.py) 
     print("\n[2/3] Chunking  (structured → recursive fallback)...")
     final_chunks = build_final_chunks(
         pages          = pages,
@@ -186,14 +170,14 @@ def main():
     )
     print(f"      Final chunks ready: {len(final_chunks)}")
 
-    # ── Step 3: Embed ──────────────────────────────────────────────────────
+    #  Step 3: Embed
     print("\n[3/3] Embedding + Uploading...")
     embed_chunks(final_chunks, model)
 
-    # ── Step 4: Upload ─────────────────────────────────────────────────────
+    # Step 4: Upload
     upload_chunks(final_chunks, sb)
 
-    print(f"\n✅  Done! Inserted {len(final_chunks)} chunks into Supabase.")
+    print(f"\n  Done! Inserted {len(final_chunks)} chunks into Supabase.")
 
 
 if __name__ == "__main__":
