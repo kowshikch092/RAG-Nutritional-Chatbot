@@ -20,12 +20,6 @@
 
 
 
-## Screenshot
-
-![Application Screenshot](assets/chat-ui.png)
-
-> The chat UI surfaces page-range citation badges (e.g. `p.592–634`) directly beneath each answer, allowing users to verify claims against the original textbook.
-
 ---
 
 
@@ -548,6 +542,13 @@ The `CitationPopup` component uses `getBoundingClientRect()` on the badge button
 Re-running ingestion after changing chunking parameters without clearing old data produced duplicate and conflicting rows. The solution was a `DELETE FROM chunks WHERE doc_id = $1` step at the start of every ingestion run, making the pipeline fully idempotent and safe to iterate on.
 
 ---
+
+## Screenshot
+
+![Application Screenshot](assets/chat-ui.png)
+
+> The chat UI surfaces page-range citation badges (e.g. `p.592–634`) directly beneath each answer, allowing users to verify claims against the original textbook
+
 
 ## Future Improvements
 
