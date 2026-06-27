@@ -12,18 +12,22 @@
 
 ---
 
-## Screenshot
-
-![Application Screenshot](./chat-ui.png)
-
-> The chat UI surfaces page-range citation badges (e.g. `p.592–634`) directly beneath each answer, allowing users to verify claims against the original textbook.
-
----
 
 ## System Architecture
 
 
 ![System Architecture](assets/architecture.png)
+
+
+
+## Screenshot
+
+![Application Screenshot](assets/chat-ui.png)
+
+> The chat UI surfaces page-range citation badges (e.g. `p.592–634`) directly beneath each answer, allowing users to verify claims against the original textbook.
+
+---
+
 
 ### Ingestion Pipeline (offline, run once)
 
@@ -133,6 +137,8 @@ nutrirag/
 │   ├── tsconfig.json
 │   └── package.json
 │
+|
+├──  assets
 ├── .env                            # Python ingestion secrets (not committed)
 ├── .gitignore
 ├── AGENTS.md                       # AI agent context and constraints
@@ -558,6 +564,3 @@ Re-running ingestion after changing chunking parameters without clearing old dat
 
 ---
 
-## License
-
-MIT © 2025. See [LICENSE](./LICENSE) for details.
