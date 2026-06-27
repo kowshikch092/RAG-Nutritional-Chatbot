@@ -14,21 +14,13 @@
 import re
 import nltk
 import tiktoken
-
 nltk.download("punkt",     quiet=True)
 nltk.download("punkt_tab", quiet=True)
-
 enc = tiktoken.get_encoding("cl100k_base")
-
-# ── Default size limits (can be overridden by callers) ────────────────────
 DEFAULT_MAX_CHUNK_SIZE = 1000   # characters
 DEFAULT_MIN_CHUNK_SIZE = 100    # characters
 
-
-# ╔══════════════════════════════════════════════════════════════════════════╗
 #   STRATEGY 1 — STRUCTURED CHUNKING  (chapter / section level)
-# ╚══════════════════════════════════════════════════════════════════════════╝
-
 def _is_chapter_header_page(text: str) -> bool:
     """
     Returns True if this page contains the recurring Hawai'i nutrition
@@ -52,30 +44,6 @@ def _guess_chapter_title(text: str) -> str:
 
 
 def structured_chapter_chunks(pages: list[dict]) -> list[dict]:
-    """
-    Groups PDF pages into chapters using the header-detection heuristic.
-
-    Args:
-        pages: list of dicts with keys 'page_number' and 'text'
-               (output of read_pdf_pages() in ingest.py)
-
-    Returns:
-        list of dicts — one dict per detected chapter:
-        {
-            chapter_index     : int,
-            title             : str,
-            page_start        : int,
-            page_end          : int,
-            chunk_char_count  : int,
-            chunk_word_count  : int,
-            chunk_token_count : int,   ← FIXED: tiktoken count (was len/4 estimate)
-            chunk_text        : str,
-        }
-
-    NOTE: chunk_token_count here uses tiktoken for consistency with
-    build_final_chunks(). The original code used len(text)/4 which gave
-    floating-point approximations that disagreed with sub-chunk token counts.
-    """
     if not pages:
         return []
 
@@ -127,36 +95,20 @@ def structured_chapter_chunks(pages: list[dict]) -> list[dict]:
     return chunks
 
 
-# ╔══════════════════════════════════════════════════════════════════════════╗
 #   STRATEGY 2 — RECURSIVE CHUNKING  (fallback for oversized blocks)
-# ╚══════════════════════════════════════════════════════════════════════════╝
-
 def _recursive_split(text: str, max_size: int) -> list[str]:
-    """
-    Internal recursive splitter.
-
-    Splitting hierarchy (tries each level before going deeper):
-      Level 1 — double newline  (\n\n)  paragraph boundary
-      Level 2 — single newline  (\n)    line boundary
-      Level 3 — NLTK sentences          sentence boundary
-      Level 4 — hard character cut      last resort (very rare)
-
-    NOTE: Tiny-chunk filtering is NOT done here — it happens in
-    recursive_chunk_text() so the caller has full control over min_chunk_size.
-    """
-    # ── Base case: already small enough ───────────────────────────────────
     if len(text) <= max_size:
         return [text]
 
-    # ── Level 1: paragraph split ───────────────────────────────────────────
+    # ── Level 1: paragraph split
     paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
     if len(paragraphs) > 1:
         result = []
         for para in paragraphs:
             result.extend(_recursive_split(para, max_size))
         return result
-
-    # ── Level 2: line split ────────────────────────────────────────────────
+        
+    # ── Level 2: line split
     lines = [l.strip() for l in text.split("\n") if l.strip()]
     if len(lines) > 1:
         result = []
@@ -199,32 +151,12 @@ def recursive_chunk_text(
     max_chunk_size: int = DEFAULT_MAX_CHUNK_SIZE,
     min_chunk_size: int = DEFAULT_MIN_CHUNK_SIZE,
 ) -> list[str]:
-    """
-    Public wrapper around _recursive_split.
-
-    Runs the recursive split and then filters out tiny fragments
-    (< min_chunk_size). This is the ONLY place min_chunk_size filtering
-    happens — matching the architecture's "Remove tiny chunks" step, which
-    comes after all splitting is complete.
-
-    Args:
-        text           : raw text block to split
-        max_chunk_size : character limit per chunk
-        min_chunk_size : chunks smaller than this are discarded
-
-    Returns:
-        list of clean chunk strings
-    """
     raw = _recursive_split(text, max_chunk_size)
     # Architecture step: "Remove tiny chunks" — applied once, after all splits
     return [c for c in raw if len(c) >= min_chunk_size]
 
-
-# ╔══════════════════════════════════════════════════════════════════════════╗
 #   GLUE — build_final_chunks()
 #   Called by ingest.py — combines both strategies
-# ╚══════════════════════════════════════════════════════════════════════════╝
-
 def build_final_chunks(
     pages: list[dict],
     doc_id: str,
@@ -232,53 +164,14 @@ def build_final_chunks(
     max_chunk_size: int = DEFAULT_MAX_CHUNK_SIZE,
     min_chunk_size: int = DEFAULT_MIN_CHUNK_SIZE,
 ) -> list[dict]:
-    """
-    Master chunking function called by ingest.py.
-
-    Pipeline (matches architecture diagram exactly):
-      1. structured_chapter_chunks()   → one block per chapter
-      2. For each chapter block:
-             char_len <= max_chunk_size  → keep as-is        (1 final chunk)
-             char_len >  max_chunk_size  → recursive_chunk_text() splits it
-             └─ recursive_chunk_text() internally filters tiny sub-chunks
-      3. Attach full metadata to every final chunk.
-      4. Return flat list → caller embeds and uploads to Supabase.
-
-    Args:
-        pages          : list[dict] from read_pdf_pages()  (page_number, text)
-        doc_id         : document identifier stored in Supabase
-        pdf_path       : source file path stored in metadata
-        max_chunk_size : character limit; triggers recursive split above this
-        min_chunk_size : discard sub-chunks smaller than this (passed through
-                         to recursive_chunk_text)
-
-    Returns:
-        Flat list of chunk dicts ready for embedding + Supabase upload:
-        {
-            doc_id       : str,
-            chunk_index  : int,   ← global, unique across all chapters
-            content      : str,
-            metadata     : {
-                source          : str,
-                chapter_index   : int,
-                chapter_title   : str,
-                page_start      : int,
-                page_end        : int,
-                sub_chunk_index : int,   ← 0 when chapter kept whole
-                char_count      : int,
-                word_count      : int,
-                token_count     : int,   ← tiktoken cl100k_base
-            }
-        }
-    """
-    # ── Step 1: structural chunking ────────────────────────────────────────
+    # ── Step 1: structural chunking
     chapter_chunks = structured_chapter_chunks(pages)
     print(f"  Structured chunks (chapters) detected : {len(chapter_chunks)}")
 
     final_chunks: list[dict] = []
     global_idx = 0  # unique index across ALL chapters and sub-chunks
 
-    # ── Step 2: recursive fallback for oversized chapters ──────────────────
+    # ── Step 2: recursive fallback for oversized chapters 
     for ch in chapter_chunks:
         text     = ch["chunk_text"]
         char_len = ch["chunk_char_count"]
@@ -290,7 +183,7 @@ def build_final_chunks(
             # Too large → split recursively; tiny fragments removed inside
             sub_texts = recursive_chunk_text(text, max_chunk_size, min_chunk_size)
 
-        # ── Step 3: attach metadata and build final row dicts ──────────────
+        # ── Step 3: attach metadata and build final row dicts
         for sub_i, sub_text in enumerate(sub_texts):
             # FIX: token count is consistent — tiktoken used here AND in
             # structured_chapter_chunks() (was len/4 there previously)
