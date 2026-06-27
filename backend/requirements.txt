@@ -1,0 +1,11 @@
+pymupdf>=1.24.0
+supabase>=2.0.0
+sentence-transformers>=2.6.0
+nltk>=3.8.1
+tqdm>=4.66.0
+python-dotenv>=1.0.1
+tiktoken>=0.7.0
+numpy
+
+# Node.js / frontend dependency used by rag-chat:
+# npm install groq-sdk
