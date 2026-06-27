@@ -50,9 +50,6 @@ NutriRAG is a production-ready Retrieval-Augmented Generation (RAG) application 
 ![System Architecture](assets/architecture.png)
 
 
-## Live Demo
-
-🌐 https://http://localhost:3000
 
 ### Ingestion Pipeline (offline, run once)
 
@@ -68,6 +65,10 @@ flowchart TD
     G -->|"SentenceTransformer\nall-MiniLM-L6-v2 · batch=100"| H["384-dim Embeddings"]
     H -->|"batch insert 200\nservice role key"| I[("Supabase\npgvector\nchunks table")]
 ```
+
+## Live Demo
+
+🌐 https://http://localhost:3000
 
 ### Query Pipeline (live, per request)
 
@@ -126,42 +127,40 @@ sequenceDiagram
 
 ---
 
-## Project Structure
-
+## 📂 Project Structure
+ 
 ```
 nutrirag/
 │
-├── backend/
-│   ├── ingest.py                   # Ingestion entry point: read → chunk → embed → upload
-│   ├── chunking.py                 # Structured + recursive chunking logic
-│   ├── test_embeddings.py          # Embedding validation and similarity sanity checks
-│   └── chunks_export.csv           # Exported chunk metadata for inspection
+├── 📁 backend/
+│   ├── ingest.py               ← Pipeline orchestrator: read → chunk → embed → upload
+│   ├── chunking.py             ← All chunking logic (structured + recursive)
+│   ├── test_embeddings.py      ← Embedding validation & similarity sanity checks
+│   └── chunks_export.csv       ← Chunk metadata export for manual inspection
 │
-├── data/
-│   └── human-nutrition-text.pdf    # Source document (~1,200 pages)
+├── 📁 data/
+│   └── human-nutrition-text.pdf   ← Source document (~1,200 pages)
 │
-├── rag-chat/                       # Next.js 14 application
-│   ├── app/
-│   │   ├── page.tsx                # Chat UI: MsgRow, CitationBtn, TypingDots
-│   │   ├── layout.tsx              # Root layout, Space Grotesk font, metadata
-│   │   ├── globals.css             # Global styles, dark theme variables
-│   │   └── api/
-│   │       └── chat/
-│   │           └── route.ts        # Edge handler: embed → search → prompt → LLM → JSON
-│   ├── public/                     # Static assets
-│   ├── .env.local                  # Runtime secrets (not committed)
+├── 📁 rag-chat/                ← Next.js 14 application root
+│   ├── 📁 app/
+│   │   ├── page.tsx            ← Chat UI: MsgRow · CitationBtn · TypingDots
+│   │   ├── layout.tsx          ← Root layout · Space Grotesk font · metadata
+│   │   ├── globals.css         ← Global styles · dark theme CSS variables
+│   │   └── 📁 api/chat/
+│   │       └── route.ts        ← Edge handler: embed → search → prompt → LLM → JSON
+│   ├── 📁 public/              ← Static assets
+│   ├── .env.local              ← Runtime secrets (never committed)
 │   ├── next.config.ts
 │   ├── tsconfig.json
 │   └── package.json
 │
-|
-├──  assets
-├── .env                            # Python ingestion secrets (not committed)
+├── 📁 assets/                  ← Screenshots & architecture diagrams
+├── .env                        ← Python ingestion secrets (never committed)
 ├── .gitignore
-├── AGENTS.md                       # AI agent context and constraints
+├── AGENTS.md                   ← AI agent context & constraints
 └── README.md
 ```
-
+ 
 ---
 
 ## Architecture Deep Dive
@@ -596,4 +595,9 @@ Re-running ingestion after changing chunking parameters without clearing old dat
 - [ ] Docker Compose — single-command local setup for the full stack
 
 ---
+
+<div align="center">
+**Built with**  **⚡RAG-Pipelines** 🧠 **semantic retrieval** · ⚡ **Groq inference** · 🗄️ **pgvector**
+ 
+</div>
 
