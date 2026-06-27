@@ -70,6 +70,8 @@ flowchart TD
 
 🌐 https://http://localhost:3000
 
+---
+
 ### Query Pipeline (live, per request)
 
 ```mermaid
@@ -597,7 +599,7 @@ Re-running ingestion after changing chunking parameters without clearing old dat
 ---
 
 <div align="center">
-**Built with**  **⚡RAG-Pipelines** 🧠 **semantic retrieval** · ⚡ **Groq inference** · 🗄️ **pgvector**
+** Built from scratch **  **⚡RAG-Pipelines** 🧠 **semantic retrieval** · ⚡ **Groq inference** · 🗄️ **pgvector**
  
 </div>
 
