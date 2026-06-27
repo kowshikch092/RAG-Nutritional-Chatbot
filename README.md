@@ -1,4 +1,5 @@
-#🥗 NutriRAG — Retrieval-Augmented Nutrition Assistant
+# 🥗 NutriRAG
+### Retrieval-Augmented Nutrition Assistant
 
 **Production-grade RAG pipeline over a 1,200-page nutrition textbook. Answers grounded in retrieved evidence. Every claim linked to a source page.**
 
